@@ -71,22 +71,64 @@ async function fetchWeibo(): Promise<HotNewsItem[]> {
 
 // 2. Zhihu
 async function fetchZhihu(): Promise<HotNewsItem[]> {
-  const res = await fetch('https://api.zhihu.com/topstory/hot-lists/total?limit=15', {
-    headers: { ...DEFAULT_HEADERS, Referer: 'https://www.zhihu.com/hot' },
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!res.ok) return [];
-  const json = (await res.json()) as any;
-  const list = json?.data || [];
-  return list.slice(0, 15).map((item: any, idx: number) => ({
-    id: `zh-${item.target?.id || idx + 1}`,
-    title: item.target?.title || '',
-    url: `https://www.zhihu.com/question/${item.target?.id}`,
-    extra: {
-      info: item.detail_text || '热榜讨论',
-      hover: item.target?.excerpt || '知乎热榜',
-    },
-  }));
+  const cookie = process.env.ZHIHU_COOKIE;
+
+  // 1) 优先：带 cookie 的官方接口（更稳定、数据更全）
+  if (cookie && cookie.trim().length > 20) {
+    try {
+      const res = await fetch(
+        'https://www.zhihu.com/api/v3/feed/topstory/hot-lists/total?limit=50&desktop=true',
+        {
+          headers: {
+            ...DEFAULT_HEADERS,
+            Referer: 'https://www.zhihu.com/hot',
+            Cookie: cookie,
+            'x-requested-with': 'fetch',
+          },
+          signal: AbortSignal.timeout(6000),
+        },
+      );
+      if (res.ok) {
+        const json = (await res.json()) as any;
+        const list = json?.data || [];
+        if (Array.isArray(list) && list.length > 0) {
+          return list.slice(0, 15).map((item: any, idx: number) => ({
+            id: `zh-${item.target?.id || idx + 1}`,
+            title: item.target?.title || '',
+            url: `https://www.zhihu.com/question/${item.target?.id}`,
+            extra: {
+              info: item.detail_text || '热榜讨论',
+              hover: item.target?.excerpt || '知乎热榜',
+            },
+          }));
+        }
+      }
+    } catch {
+      // 降级到无 cookie 接口
+    }
+  }
+
+  // 2) 降级：无 cookie 接口
+  try {
+    const res = await fetch('https://api.zhihu.com/topstory/hot-lists/total?limit=15', {
+      headers: { ...DEFAULT_HEADERS, Referer: 'https://www.zhihu.com/hot' },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return [];
+    const json = (await res.json()) as any;
+    const list = json?.data || [];
+    return list.slice(0, 15).map((item: any, idx: number) => ({
+      id: `zh-${item.target?.id || idx + 1}`,
+      title: item.target?.title || '',
+      url: `https://www.zhihu.com/question/${item.target?.id}`,
+      extra: {
+        info: item.detail_text || '热榜讨论',
+        hover: item.target?.excerpt || '知乎热榜',
+      },
+    }));
+  } catch {
+    return [];
+  }
 }
 
 // 3. Bilibili

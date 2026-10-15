@@ -11,7 +11,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Enable corepack for fast reproducible pnpm package manager
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate && pnpm config set minimum-release-age 0
 
 # Copy dependency manifests first for Docker layer caching
 COPY package.json pnpm-lock.yaml* tsconfig.json tsup.config.ts ./

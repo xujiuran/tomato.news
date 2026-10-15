@@ -7,11 +7,12 @@ services:
     container_name: tomato-news
     restart: always
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       - PORT=3000
       - HOST=0.0.0.0
       - NODE_ENV=production
+      - ZHIHU_COOKIE=${ZHIHU_COOKIE}
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
       interval: 30s
