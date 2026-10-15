@@ -267,15 +267,25 @@ async function fetchITHome(): Promise<HotNewsItem[]> {
   if (!res.ok) return [];
   const json = (await res.json()) as any;
   const list = json?.newslist || [];
-  return list.slice(0, 12).map((item: any, idx: number) => ({
-    id: `it-${item.newsid || idx + 1}`,
-    title: item.title || '',
-    url: item.url || `https://www.ithome.com/html/it/${item.newsid}.htm`,
-    extra: {
-      info: item.postdate ? item.postdate.slice(11, 16) : '数码资讯',
-      hover: 'IT之家一手科技',
-    },
-  }));
+  return list.slice(0, 15).map((item: any, idx: number) => {
+    let url = (item.url || '').trim();
+    if (url.startsWith('/')) {
+      url = `https://www.ithome.com${url}`;
+    } else if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `https://www.ithome.com/${url.replace(/^\/+/, '')}`;
+    } else if (!url && item.newsid) {
+      url = `https://www.ithome.com/html/it/${item.newsid}.htm`;
+    }
+    return {
+      id: `it-${item.newsid || idx + 1}`,
+      title: item.title || '',
+      url: url || 'https://www.ithome.com',
+      extra: {
+        info: item.postdate ? item.postdate.slice(11, 16) : '数码资讯',
+        hover: 'IT之家一手科技',
+      },
+    };
+  });
 }
 
 // 10. Hacker News
