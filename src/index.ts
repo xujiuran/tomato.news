@@ -45,6 +45,7 @@ app.get('/', (c) => {
 app.route('/health', healthRouter);
 app.route('/api', apiRouter);
 app.route('/api/news', newsRouter);
+app.route('/api/s', newsRouter); // Full compatibility with NewsNow /api/s/entire
 
 // 404 Handler
 app.notFound((c) => {
