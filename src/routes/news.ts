@@ -69,6 +69,18 @@ async function fetchWeibo(): Promise<HotNewsItem[]> {
   }));
 }
 
+
+// 知乎 question id 超过 JS 安全整数范围，必须用字符串型 card_id 构建链接
+function zhihuQuestionUrl(item: any): string {
+  const cid = typeof item?.card_id === "string" ? item.card_id.replace(/^Q_/, "") : "";
+  const sid = cid || (typeof item?.target?.url === "string" ? (item.target.url.match(/questions\/(\d+)/) || [])[1] : "");
+  return sid ? `https://www.zhihu.com/question/${sid}` : "https://www.zhihu.com/hot";
+}
+function zhihuQuestionId(item: any): string {
+  const cid = typeof item?.card_id === "string" ? item.card_id.replace(/^Q_/, "") : "";
+  return cid || String(item?.target?.id ?? "");
+}
+
 // 2. Zhihu
 async function fetchZhihu(): Promise<HotNewsItem[]> {
   const cookie = process.env.ZHIHU_COOKIE;
@@ -93,9 +105,9 @@ async function fetchZhihu(): Promise<HotNewsItem[]> {
         const list = json?.data || [];
         if (Array.isArray(list) && list.length > 0) {
           return list.slice(0, 15).map((item: any, idx: number) => ({
-            id: `zh-${item.target?.id || idx + 1}`,
+            id: `zh-${zhihuQuestionId(item) || idx + 1}`,
             title: item.target?.title || '',
-            url: `https://www.zhihu.com/question/${item.target?.id}`,
+            url: zhihuQuestionUrl(item),
             extra: {
               info: item.detail_text || '热榜讨论',
               hover: item.target?.excerpt || '知乎热榜',
@@ -118,9 +130,9 @@ async function fetchZhihu(): Promise<HotNewsItem[]> {
     const json = (await res.json()) as any;
     const list = json?.data || [];
     return list.slice(0, 15).map((item: any, idx: number) => ({
-      id: `zh-${item.target?.id || idx + 1}`,
+      id: `zh-${zhihuQuestionId(item) || idx + 1}`,
       title: item.target?.title || '',
-      url: `https://www.zhihu.com/question/${item.target?.id}`,
+      url: zhihuQuestionUrl(item),
       extra: {
         info: item.detail_text || '热榜讨论',
         hover: item.target?.excerpt || '知乎热榜',
