@@ -1,0 +1,40 @@
+{
+  "name": "tomato.news",
+  "version": "1.0.0",
+  "description": "Production-ready lightweight TomatoX News server optimized for Docker ARM64 deployment",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup src/index.ts --format esm --clean --minify --target node22",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "docker:build": "docker build -t tomato-news:latest .",
+    "docker:run": "docker run -d --name tomato-news -p 3000:3000 tomato-news:latest",
+    "docker:compose": "docker compose up -d --build"
+  },
+  "keywords": [
+    "hono",
+    "docker",
+    "arm64",
+    "vps",
+    "microservice",
+    "api"
+  ],
+  "author": "TomatoX",
+  "license": "MIT",
+  "dependencies": {
+    "@hono/node-server": "^1.13.8",
+    "dotenv": "^16.4.7",
+    "hono": "^4.7.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "tsup": "^8.3.6",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

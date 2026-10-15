@@ -1,0 +1,26 @@
+services:
+  tomato-news:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tomato-news:latest
+    container_name: tomato-news
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - HOST=0.0.0.0
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    # Optional resource constraints for VPS stability
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "1.0"
