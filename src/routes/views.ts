@@ -4,20 +4,11 @@ import path from 'node:path';
 
 export const viewsRouter = new Hono();
 
-// Base seed counts for existing posts to give realistic visitor metrics
-const DEFAULT_SEEDS: Record<string, number> = {
-  'minimal-web-engineering': 486,
-  'ai-knowledge-workflow': 362,
-  'crafting-tiny-tools': 295,
-  'modern-css-evolution': 328,
-  'deep-work-system': 441,
-};
-
 const DATA_DIR = process.env.DATA_DIR || path.join(process.cwd(), 'data');
 const VIEWS_FILE = path.join(DATA_DIR, 'views.json');
 
-// In-memory cache
-let viewsCache: Record<string, number> = { ...DEFAULT_SEEDS };
+// In-memory cache for real visitor view counts
+let viewsCache: Record<string, number> = {};
 let isDirty = false;
 let saveTimer: NodeJS.Timeout | null = null;
 
@@ -30,12 +21,14 @@ function loadViewsFromDisk() {
     if (fs.existsSync(VIEWS_FILE)) {
       const raw = fs.readFileSync(VIEWS_FILE, 'utf-8');
       const parsed = JSON.parse(raw);
-      viewsCache = { ...DEFAULT_SEEDS, ...parsed };
+      if (parsed && typeof parsed === 'object') {
+        viewsCache = parsed;
+      }
     } else {
       saveViewsToDiskImmediately();
     }
   } catch (err) {
-    console.error('[Views] Failed to load views from disk, using defaults:', err);
+    console.error('[Views] Failed to load views from disk:', err);
   }
 }
 
@@ -83,7 +76,7 @@ viewsRouter.get('/:slug', (c) => {
     return c.json({ code: 400, message: 'Missing slug parameter' }, 400);
   }
 
-  const views = viewsCache[slug] ?? (DEFAULT_SEEDS[slug] || 120);
+  const views = viewsCache[slug] || 0;
   return c.json({
     code: 200,
     status: 'success',
@@ -94,14 +87,14 @@ viewsRouter.get('/:slug', (c) => {
   });
 });
 
-// 3. POST /api/views/:slug - Increment view count for article
+// 3. POST /api/views/:slug - Increment real view count for article
 viewsRouter.post('/:slug', (c) => {
   const slug = c.req.param('slug');
   if (!slug) {
     return c.json({ code: 400, message: 'Missing slug parameter' }, 400);
   }
 
-  const current = viewsCache[slug] ?? (DEFAULT_SEEDS[slug] || 120);
+  const current = viewsCache[slug] || 0;
   const next = current + 1;
   viewsCache[slug] = next;
   scheduleSave();
