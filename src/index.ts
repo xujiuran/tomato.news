@@ -6,6 +6,7 @@ import { prettyJSON } from 'hono/pretty-json';
 import { healthRouter } from './routes/health.js';
 import { apiRouter } from './routes/api.js';
 import { newsRouter } from './routes/news.js';
+import { viewsRouter } from './routes/views.js';
 
 // Load environment variables natively (Node.js 20+)
 if (typeof process.loadEnvFile === 'function') {
@@ -45,6 +46,7 @@ app.get('/', (c) => {
 app.route('/health', healthRouter);
 app.route('/api', apiRouter);
 app.route('/api/news', newsRouter);
+app.route('/api/views', viewsRouter);
 app.route('/api/s', newsRouter); // Full compatibility with NewsNow /api/s/entire
 
 // 404 Handler
